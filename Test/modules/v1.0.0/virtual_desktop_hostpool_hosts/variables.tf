@@ -1,66 +1,50 @@
-
-variable "resource_group_name" {
-  type        = string
-  description = "Name of the Resource group in which to deploy session host"
+variable "resource_group_location" {
+  type = string
 }
+
+variable "envi" {
+  type = string
+}
+
 
 variable "vnet_name" {
-  description = "Name of the Virtual Network"
+  type = string
 }
-
 variable "subnet_name" {
-  description = "Name of the Subnet"
+  type = string
 }
-
 variable "rdsh_count" {
-  description = "Number of AVD machines to deploy"
+  type =  number
 }
-
-variable "prefix" {
-  type        = string
-  description = "Prefix of the name of the AVD machine(s)"
-}
-
 variable "vm_size" {
-  description = "Size of the machine to deploy"
+  type = string
 }
-
 variable "local_admin_username" {
-  type        = string
-  description = "local admin username"
+  type = string
 }
-
 variable "local_admin_password" {
-  type        = string
-  description = "local admin password"
+  type = string
 }
-variable "source_image_reference" {
-  type = map(string)
+variable "offer" {
+  type = string
+}
+variable "sku" {
+  type = string
 }
 variable "os_disk_type" {
   type = string
 }
-
 variable "domain_name" {
-    type = string
+  type = string
 }
-
 variable "domain_user_upn" {
-  type =string
+  type = string
 }
-
 variable "domain_password" {
-  type=string
+  type = string
 }
-
-variable "host_pool_name" {
-  type=string
-}
-
-
 
 variable "vnet_rg" {
   type        = string
   description = "Name of the Resource group in which to deploy session host"
 }
-

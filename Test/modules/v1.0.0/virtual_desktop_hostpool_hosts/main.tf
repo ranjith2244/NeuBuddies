@@ -1,16 +1,18 @@
 locals {
   utc_time = timestamp()
   additional_time  = timeadd(local.utc_time, "1h30m")
+  tags = {
+    environment = "${var.envi}-Environment"
+  }
+  resource_group_name = "${var.envi}-Resource-Group"
+  host_pool_name = "${var.envi}-Host-Pool"
 }
+
 
 data "azurerm_resources" "host_pool" {
   type     = "Microsoft.DesktopVirtualization/hostpools"
-  name     = var.host_pool_name
-}
-
-
-data "azurerm_resource_group" "resource_group"{
-  name = var.resource_group_name
+  name     = local.host_pool_name
+  resource_group_name = local.resource_group_name
 }
 
 data "azurerm_subnet" "subnet" {
@@ -21,22 +23,24 @@ data "azurerm_subnet" "subnet" {
 
 resource "azurerm_network_interface" "avd_vm_nic" {
   count               = var.rdsh_count
-  name                = "${var.prefix}-${count.index + 1}-nic"
-  resource_group_name = var.resource_group_name
-  location            = data.azurerm_resource_group.resource_group.location
+  name                = "${var.envi}-${count.index + 1}-nic"
+  resource_group_name = local.resource_group_name
+  location            = var.resource_group_location
 
   ip_configuration {
-    name                          = "nic${count.index + 1}_config"
+    name                          = "${var.envi}-nic${count.index + 1}_config"
     subnet_id                     = data.azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
   }
+   tags     = merge(local.tags, tomap({ Created_Time = formatdate("DD-MM-YYYY hh:mm:ss ZZZ", timestamp()) }))
+  lifecycle { ignore_changes = [tags["Created_Time"]] }
 }
 
 resource "azurerm_windows_virtual_machine" "avd_vm" {
   count                 = var.rdsh_count
-  name                  = "${var.prefix}-${count.index + 1}"
-  resource_group_name   = var.resource_group_name
-  location            = data.azurerm_resource_group.resource_group.location
+  name                  = "${var.envi}-${count.index + 1}"
+  resource_group_name   = local.resource_group_name
+  location            = var.resource_group_location
   size                  = var.vm_size
   network_interface_ids = ["${azurerm_network_interface.avd_vm_nic.*.id[count.index]}"]
   # azurerm_windows_virtual_machine.avd_vm.*.id[count.index]
@@ -45,17 +49,19 @@ resource "azurerm_windows_virtual_machine" "avd_vm" {
   admin_password        = var.local_admin_password
 
   os_disk {
-    name                 = "${lower(var.prefix)}-${count.index + 1}"
+    name                 = "${lower(var.envi)}-${count.index + 1}"
     caching              = "ReadWrite"
     storage_account_type = var.os_disk_type
   }
 
   source_image_reference {
-    publisher = var.source_image_reference["publisher"]
-    offer     = var.source_image_reference["offer"]
-    sku       = var.source_image_reference["sku"]
-    version   = var.source_image_reference["version"]
+    publisher = "MicrosoftWindowsDesktop"
+    offer     = var.offer
+    sku       = var.sku
+    version   = "latest"
   }
+   tags     = merge(local.tags, tomap({ Created_Time = formatdate("DD-MM-YYYY hh:mm:ss ZZZ", timestamp()) }))
+  lifecycle { ignore_changes = [tags["Created_Time"]] }
 
   depends_on = [
 

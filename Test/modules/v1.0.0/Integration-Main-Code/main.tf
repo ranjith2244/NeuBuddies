@@ -1,9 +1,11 @@
 
 module "resource_group" {
   source                   = "../resource_group/v1.1.0"
-  resource_group_variables = var.resource_group_variables
+  envi = var.envi
+  resource_group_location = var.resource_group_location
 }
 
+/*
 
 #Virtual Network
 module "virtual_network" {
@@ -18,48 +20,47 @@ module "subnet" {
   subnet_variables = var.subnet_variables
   depends_on              = [module.virtual_network]
 }
-
-
-#Network
-module "network_security_group" {
-  source                          = "../network_security_group/v1.1.0"
-  network_security_group_variable = var.network_security_group_variable
-  depends_on                      = [module.resource_group]
-
-}
-
+*/
 module "virtual_desktop_host_pool" {
   source                  = "../virtual_desktop_hostpool/v1.0.0"
-  avd_host_pool_variables = var.avd_host_pool_variables
+  envi = var.envi
+  resource_group_location = var.resource_group_location
+  hostpool_type = var.hostpool_type
   depends_on              = [module.resource_group]
 }
+
 module "virtual_desktop_application_group" {
   source              = "../virtual_desktop_application_group/v1.0.0"
-  appgroups_variables = var.appgroups_variables
+  envi = var.envi
+  resource_group_location = var.resource_group_location
   depends_on          = [module.virtual_desktop_host_pool]
 }
 
 module "virtual_desktop_workspace" {
   source               = "../virtual_desktop_workspace/v1.0.0"
-  workspaces_variables = var.workspaces_variables
-  depends_on           = [module.resource_group]
+  envi = var.envi
+  resource_group_location = var.resource_group_location
+  depends_on           = [module.resource_group,module.virtual_desktop_application_group]
 }
 
 module "virtual_desktop_workspace_application_group_association" {
   source                = "../virtual_desktop_workspace_application_group_association/v1.0.0"
-  association_variables = var.association_variables
+  envi = var.envi
+  resource_group_location = var.resource_group_location
   depends_on            = [module.virtual_desktop_workspace, module.virtual_desktop_application_group]
 }
 
+
+
 #################################################################################################
 
-/*
+
 module "virtual_desktop_hostpool_hosts" {
   source                 = "../virtual_desktop_hostpool_hosts"
-  resource_group_name    = var.resource_group_name
-  prefix                 = var.prefix
-  host_pool_name         = var.host_pool_name
-  source_image_reference = var.source_image_reference
+  envi = var.envi
+  resource_group_location = var.resource_group_location
+  offer  = var.offer
+  sku = var.sku
   vm_size                = var.vm_size
   os_disk_type           = var.os_disk_type
   vnet_name              = var.vnet_name
@@ -75,4 +76,3 @@ module "virtual_desktop_hostpool_hosts" {
     module.resource_group, module.virtual_desktop_host_pool, module.virtual_desktop_workspace_application_group_association
   ]
 }
-*/
